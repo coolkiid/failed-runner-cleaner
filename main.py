@@ -53,7 +53,13 @@ def failed_runner_count(api: client.CustomObjectsApi, namespace: str) -> int:
     r = api.list_namespaced_custom_object(
         "actions.github.com", "v1alpha1", namespace, RUNNER_SETS_PLURAL
     )
-    return r["items"][0]["status"]["failedEphemeralRunners"]
+
+    status = r["items"][0].get("status", None)
+    if status is None:
+        _print(f"no status field found in the response for {namespace}")
+        return None
+
+    return r["items"][0]["status"].get("failedEphemeralRunners", None)
 
 
 def read_namespaces_from_file(file_path: str) -> list:
@@ -61,12 +67,12 @@ def read_namespaces_from_file(file_path: str) -> list:
         lines = f.readlines()
         namespaces = [line.strip() for line in lines if line.strip()]
 
-    return namespaces
+    return list(set(namespaces))
 
 
 def check_runners(api: client.CustomObjectsApi, namespace: str, dry_run: bool = True):
-    num: int = failed_runner_count(api, namespace)
-    _print(f"{num} failed runner(s) found.")
+    num: int = failed_runner_count(api, namespace) or 0
+    _print(f"{num} failed runner(s) found in {namespace}.")
 
     if num == 0:
         return
