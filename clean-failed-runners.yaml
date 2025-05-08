@@ -1,0 +1,39 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: clean-failed-runners
+spec:
+  schedule: "*/10 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          nodeSelector:
+            kubernetes.io/hostname: k8s-node-1
+          concurrencyPolicy: Forbid
+          containers:
+          - name: failed-runner-cleaner
+            image: failed-runner-cleaner:v1
+            imagePullPolicy: IfNotPresent
+            resources:
+              requests:
+                cpu: 500m
+                memory: 256Mi
+              limits:
+                cpu: 1000m
+                memory: 512Mi
+            command:
+            - python3 main.py --dry-run --namespace-list /opt/failed-runner-cleaner/list.txt
+            volumeMounts:
+            - name: cleaner-volume
+              mountPath: /opt/failed-runner-cleaner
+            - name: kube-config
+              mountPath: /root/.kube/config
+          restartPolicy: OnFailure
+          volumes:
+          - name: cleaner-volume
+            hostPath:
+              path: /opt/failed-runner-cleaner
+          - name: kube-config
+            hostPath:
+              path: /root/.kube/config
