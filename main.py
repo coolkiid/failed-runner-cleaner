@@ -56,12 +56,37 @@ def failed_runner_count(api: client.CustomObjectsApi, namespace: str) -> int:
     return r["items"][0]["status"]["failedEphemeralRunners"]
 
 
+def read_namespaces_from_file(file_path: str) -> list:
+    with open(file_path, "r") as f:
+        lines = f.readlines()
+        namespaces = [line.strip() for line in lines if line.strip()]
+
+    return namespaces
+
+
+def check_runners(api: client.CustomObjectsApi, namespace: str, dry_run: bool = True):
+    num: int = failed_runner_count(api, namespace)
+    _print(f"{num} failed runner(s) found.")
+
+    if num == 0:
+        return
+
+    list_failed_runners(api, namespace, EPHEMERAL_RUNNERS_PLURAL)
+
+    if dry_run:
+        return
+
+    delete_failed_runners(api, namespace, EPHEMERAL_RUNNERS_PLURAL)
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="This tools is for cleaning failed ephemeral runners"
     )
     parser.add_argument(
-        "-n", "--namespace", required=True, help="the runner's namespace"
+        "--namespace-list",
+        required=True,
+        help="the absolute file path that records the watched runners' namespaces",
     )
     parser.add_argument(
         "--dry-run", action="store_true", help="print the failed runners' name only"
@@ -71,21 +96,11 @@ def main():
     config.load_kube_config()
     api = client.CustomObjectsApi()
 
-    namespace: str = args.namespace
-    _print(f"check failed runners in {namespace}")
+    namespaces: list = read_namespaces_from_file(args.namespace_list)
+    _print(f"check failed runners in {namespaces}")
 
-    num: int = failed_runner_count(api, namespace)
-    _print(f"{num} failed runner(s) found.")
-
-    if num == 0:
-        return
-
-    list_failed_runners(api, namespace, EPHEMERAL_RUNNERS_PLURAL)
-
-    if args.dry_run:
-        return
-
-    delete_failed_runners(api, namespace, EPHEMERAL_RUNNERS_PLURAL)
+    for namespace in namespaces:
+        check_runners(api, namespace, args.dry_run)
 
 
 main()
