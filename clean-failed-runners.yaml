@@ -10,7 +10,6 @@ spec:
         spec:
           nodeSelector:
             kubernetes.io/hostname: k8s-node-1
-          concurrencyPolicy: Forbid
           containers:
           - name: failed-runner-cleaner
             image: failed-runner-cleaner:v1
@@ -23,7 +22,11 @@ spec:
                 cpu: 1000m
                 memory: 512Mi
             command:
-            - python3 main.py --dry-run --namespace-list /opt/failed-runner-cleaner/list.txt
+            - python3
+            - main.py
+            - --dry-run
+            - --namespace-list
+            - /opt/failed-runner-cleaner/list.txt
             volumeMounts:
             - name: cleaner-volume
               mountPath: /opt/failed-runner-cleaner
