@@ -6,12 +6,16 @@ from kubernetes import client, config
 RUNNER_SETS_PLURAL = "autoscalingrunnersets"
 EPHEMERAL_RUNNERS_PLURAL = "ephemeralrunners"
 
+LOG_FILE_PATH = "/opt/failed-runner-cleaner/log.txt"
+
 
 def _print(message: str, warning: bool = False):
     if warning:
         message = f"\033[93m{message}\033[0m"
 
     print(f"[{datetime.datetime.now()}] {message}")
+    with open(LOG_FILE_PATH, "a") as f:
+        f.write(f"[{datetime.datetime.now()}] {message}\n")
 
 
 def list_failed_runners(
