@@ -7,7 +7,10 @@ RUNNER_SETS_PLURAL = "autoscalingrunnersets"
 EPHEMERAL_RUNNERS_PLURAL = "ephemeralrunners"
 
 
-def _print(message: str):
+def _print(message: str, warning: bool = False):
+    if warning:
+        message = f"\033[93m{message}\033[0m"
+
     print(f"[{datetime.datetime.now()}] {message}")
 
 
@@ -31,7 +34,7 @@ def list_failed_runners(
             failed_runner = status["runnerName"]
             failed_runners.append(failed_runner)
 
-    _print(f"all failed ephemeral runners: {failed_runners}")
+    _print(f"all failed ephemeral runners: {failed_runners}", warning=True)
     return failed_runners
 
 
@@ -56,7 +59,7 @@ def failed_runner_count(api: client.CustomObjectsApi, namespace: str) -> int:
 
     status = r["items"][0].get("status", None)
     if status is None:
-        _print(f"no status field found in the response for {namespace}")
+        _print(f"no status field found in the response for {namespace}", warning=True)
         return None
 
     return r["items"][0]["status"].get("failedEphemeralRunners", None)
