@@ -85,12 +85,12 @@ def check_runners(api: client.CustomObjectsApi, namespace: str, dry_run: bool = 
     if num == 0:
         return
 
-    list_failed_runners(api, namespace, EPHEMERAL_RUNNERS_PLURAL)
+    failed_runners = list_failed_runners(api, namespace)
 
     if dry_run:
         return
 
-    delete_failed_runners(api, namespace, EPHEMERAL_RUNNERS_PLURAL)
+    delete_failed_runners(api, namespace, failed_runners)
 
 
 def main():
