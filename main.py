@@ -10,12 +10,13 @@ LOG_FILE_PATH = "/opt/failed-runner-cleaner/log.txt"
 
 
 def _print(message: str, warning: bool = False):
+    with open(LOG_FILE_PATH, "a") as f:
+        f.write(f"[{datetime.datetime.now()}] {message}\n")
+
     if warning:
         message = f"\033[93m{message}\033[0m"
 
     print(f"[{datetime.datetime.now()}] {message}")
-    with open(LOG_FILE_PATH, "a") as f:
-        f.write(f"[{datetime.datetime.now()}] {message}\n")
 
 
 def list_failed_runners(
@@ -107,6 +108,7 @@ def main():
     args = parser.parse_args()
 
     config.load_kube_config()
+    config.load_incluster_config()
     api = client.CustomObjectsApi()
 
     namespaces: list = read_namespaces_from_file(args.namespace_list)
